@@ -1,15 +1,13 @@
 class NodeRBT {
     private data: number;
-    private father!: NodeRBT; // NodeRBT* es un apuntador
-    private leftChild!: NodeRBT; // "!" significa que el atributo no será inicializado en el constructor ...
-    private rightChild!: NodeRBT; // ... pero que sí se inicializará en otra parte
+    private father!: NodeRBT;
+    private leftChild!: NodeRBT;
+    private rightChild!: NodeRBT;
     private color: string;
 
     constructor(data: number, isLeaf?: boolean) {
         this.data = data;
-        this.color = "RED";
-        if (isLeaf)
-            this.color = "BLACK";
+        this.color = isLeaf ? "BLACK" : "RED";
     }
 
     public getData(): number {
@@ -53,6 +51,9 @@ class NodeRBT {
     }
 }
 
+class RBTree {
+    private root: NodeRBT;
+    private leaf: NodeRBT;
 
     constructor() {
         this.leaf = new NodeRBT(0, true);
@@ -60,10 +61,8 @@ class NodeRBT {
     }
 
     private fixInsert(testNode: NodeRBT): void {
-        while (testNode !== this.root && testNode.getFather().getColor() == "RED") {
-            // si el padre de testNode está en el hijo izquierdo del abuelo de testNode
+        while (testNode !== this.root && testNode.getFather().getColor() === "RED") {
             if (testNode.getFather() === testNode.getFather().getFather().getLeftChild()) {
-                // significa que el tío es el hijo derecho del abuelo de testNode
                 let uncle: NodeRBT = testNode.getFather().getFather().getRightChild();
                 if (uncle.getColor() === "RED") {
                     testNode.getFather().setNodeAsBlack();
@@ -71,7 +70,6 @@ class NodeRBT {
                     testNode.getFather().getFather().setNodeAsRed();
                     testNode = testNode.getFather().getFather();
                 } else {
-                    // comprobamos si testNode es hijo izquierdo
                     if (testNode === testNode.getFather().getRightChild()) {
                         testNode = testNode.getFather();
                         this.leftRotate(testNode);
@@ -81,7 +79,6 @@ class NodeRBT {
                     this.rightRotate(testNode.getFather().getFather());
                 }
             } else {
-                // significa que el tío es el hijo izquierdo del abuelo de testNode
                 let uncle: NodeRBT = testNode.getFather().getFather().getLeftChild();
                 if (uncle.getColor() === "RED") {
                     testNode.getFather().setNodeAsBlack();
@@ -89,7 +86,6 @@ class NodeRBT {
                     testNode.getFather().getFather().setNodeAsRed();
                     testNode = testNode.getFather().getFather();
                 } else {
-                    // comprobamos si testNode es hijo izquierdo
                     if (testNode === testNode.getFather().getLeftChild()) {
                         testNode = testNode.getFather();
                         this.rightRotate(testNode);
@@ -106,15 +102,17 @@ class NodeRBT {
     private leftRotate(x: NodeRBT): void {
         let y: NodeRBT = x.getRightChild();
         x.setRightChild(y.getLeftChild());
-        if (y.getLeftChild() != this.leaf)
+        if (y.getLeftChild() !== this.leaf) {
             y.getLeftChild().setFather(x);
+        }
         y.setFather(x.getFather());
-        if (x.getFather() == this.leaf)
+        if (x.getFather() === this.leaf) {
             this.root = y;
-        else if (x === x.getFather().getLeftChild())
+        } else if (x === x.getFather().getLeftChild()) {
             x.getFather().setLeftChild(y);
-        else
+        } else {
             x.getFather().setRightChild(y);
+        }
         y.setLeftChild(x);
         x.setFather(y);
     }
@@ -122,40 +120,55 @@ class NodeRBT {
     private rightRotate(x: NodeRBT): void {
         let y: NodeRBT = x.getLeftChild();
         x.setLeftChild(y.getRightChild());
-        if (y.getRightChild() != this.leaf)
+        if (y.getRightChild() !== this.leaf) {
             y.getRightChild().setFather(x);
+        }
         y.setFather(x.getFather());
-        if (x.getFather() == this.leaf)
+        if (x.getFather() === this.leaf) {
             this.root = y;
-        else if (x === x.getFather().getRightChild())
+        } else if (x === x.getFather().getRightChild()) {
             x.getFather().setRightChild(y);
-        else
+        } else {
             x.getFather().setLeftChild(y);
+        }
         y.setRightChild(x);
         x.setFather(y);
     }
 
-    private printNode(nodo: NodeRBT): void {
-        if (nodo.getLeftChild() !== this.leaf)
-            this.printNode(nodo.getLeftChild());
-        console.log(nodo.getData() + "(" + nodo.getColor() + ")");
-        if (nodo?.getRightChild() !== this.leaf)
-            this.printNode(nodo.getRightChild());
+    private printNode(node: NodeRBT): void {
+        if (node.getLeftChild() !== this.leaf) this.printNode(node.getLeftChild());
+        console.log(node.getData() + "(" + node.getColor() + ")");
+        if (node.getRightChild() !== this.leaf) this.printNode(node.getRightChild());
     }
 
     public printAll(): void {
         this.printNode(this.root);
     }
 
+    private searchNode(startNode: NodeRBT, reference: number): string | void {
+        if (startNode === this.leaf) {
+            return "-1";
+        }
+        if (startNode.getData() === reference) {
+            return `El nodo ${reference} se encontró`;
+        }
+        if (reference < startNode.getData()) {
+            return this.searchNode(startNode.getLeftChild(), reference);
+        }
+        return this.searchNode(startNode.getRightChild(), reference);
+    }
+
+    public search(reference: number): string | void {
+        return this.searchNode(this.root, reference);
+    }
+
     public insert(data: number): void {
-        // Inserción normal de BST
         let newNode: NodeRBT = new NodeRBT(data);
         let parent: NodeRBT = this.leaf;
         let current: NodeRBT = this.root;
-        // Los RBT por la propiedad 5 inserta un nodo hoja a los hijos izquierdo y derecho
         newNode.setLeftChild(this.leaf);
         newNode.setRightChild(this.leaf);
-        // Continua inserción normal de BST
+
         while (current !== this.leaf) {
             parent = current;
             if (newNode.getData() < current.getData()) {
@@ -164,6 +177,7 @@ class NodeRBT {
                 current = current.getRightChild();
             }
         }
+
         newNode.setFather(parent);
         if (parent === this.leaf) {
             this.root = newNode;
@@ -173,23 +187,14 @@ class NodeRBT {
             parent.setRightChild(newNode);
         }
 
-        // Propiedades del RBT
         if (newNode.getFather() === this.leaf) {
-            newNode.setNodeAsBlack()
+            newNode.setNodeAsBlack();
             return;
         }
-        if (newNode.getFather().getFather() == this.leaf)
-            return;
-        // corregir inserción
+
+        if (newNode.getFather().getFather() === this.leaf) return;
+
         this.fixInsert(newNode);
-    }
-    
-    public search (data:number)void{
-      int 
-    }
-    
-    public inorden (data:number) void{
-      
     }
 }
 
@@ -201,4 +206,9 @@ myRBTree.insert(20);
 myRBTree.insert(30);
 myRBTree.insert(50);
 myRBTree.insert(45);
+
+console.log("Recorrido Inorden:");
 myRBTree.printAll();
+console.log("Nodo encontrado-> ", myRBTree.search(15));
+console.log("Nodo no encontrado-> ", myRBTree.search(150));
+console.log("Dennys Carreto 2276616");
